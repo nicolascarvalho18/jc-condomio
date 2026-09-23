@@ -169,3 +169,31 @@ jc-condomio/
         ├── pages/             # SetupAdmin, Login, Dashboard, Condominios, Clientes, Contratos, Financeiro, Relatórios, Auditoria, Configurações
         └── types/             # Tipagens TypeScript completas
 ```
+## Publicação em produção
+
+O frontend pode ser publicado no Cloudflare Workers/Pages, mas o backend Spring Boot e o banco precisam estar hospedados separadamente. O banco H2 local não deve ser publicado.
+
+### Frontend
+
+Configure a variável de build no provedor do frontend:
+
+```text
+VITE_API_BASE_URL=https://api.exemplo.com/api/v1
+```
+
+Quando essa variável não existir, o desenvolvimento local continuará usando o proxy do Vite para `http://localhost:8080`.
+
+### Backend
+
+Configure no serviço Java:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://servidor:5432/banco
+SPRING_DATASOURCE_USERNAME=usuario
+SPRING_DATASOURCE_PASSWORD=senha
+JWT_SECRET=chave-aleatoria-com-pelo-menos-32-caracteres
+CORS_ALLOWED_ORIGINS=https://jc-condomio.nicolasbdhshdh.workers.dev
+```
+
+As credenciais devem ser cadastradas como variáveis secretas no provedor. Nunca coloque esses valores no GitHub, em arquivos `.env` versionados ou no frontend.
