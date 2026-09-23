@@ -1,0 +1,6 @@
+target
+data
+.m2repo
+.maven
+*.log
+.env

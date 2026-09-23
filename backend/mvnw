@@ -1,0 +1,8 @@
+#!/bin/sh
+DIR="$(cd "$(dirname "$0")" && pwd)"
+MAVEN_CMD="$DIR/.maven/apache-maven-3.9.6/bin/mvn"
+if [ ! -f "$MAVEN_CMD" ]; then
+    echo "Maven binary not found at $MAVEN_CMD"
+    exit 1
+fi
+exec "$MAVEN_CMD" "$@"

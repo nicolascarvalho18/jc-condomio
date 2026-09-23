@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jccondomio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-jccondomiodb}
+      POSTGRES_USER: ${DB_USERNAME:-jcuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD deve ser definido no arquivo .env}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - jc_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-jcuser} -d ${DB_NAME:-jccondomiodb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jccondomio-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-jccondomiodb}
+      DB_USERNAME: ${DB_USERNAME:-jcuser}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD deve ser definido no arquivo .env}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET deve ser definido no arquivo .env}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jccondomio-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  jc_pgdata:
+    name: jc_pgdata
