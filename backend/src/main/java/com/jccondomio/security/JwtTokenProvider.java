@@ -80,4 +80,12 @@ public class JwtTokenProvider {
             return false;
         }
     }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            return "REFRESH".equals(getClaims(token).get("type", String.class));
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
 }

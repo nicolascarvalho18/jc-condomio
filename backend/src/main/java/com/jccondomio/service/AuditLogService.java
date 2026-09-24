@@ -33,12 +33,9 @@ public class AuditLogService {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs != null) {
             HttpServletRequest request = attrs.getRequest();
-            String xff = request.getHeader("X-Forwarded-For");
-            if (xff != null && !xff.isBlank()) {
-                ipAddress = xff.split(",")[0].trim();
-            } else {
-                ipAddress = request.getRemoteAddr();
-            }
+            // Não registrar X-Forwarded-For diretamente: esse cabeçalho pode
+            // ser forjado pelo cliente quando não há proxy confiável definido.
+            ipAddress = request.getRemoteAddr();
         }
 
         AuditLog log = AuditLog.builder()

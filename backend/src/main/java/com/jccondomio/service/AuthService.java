@@ -141,7 +141,8 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthDto.LoginResponse refreshToken(AuthDto.RefreshTokenRequest request) {
-        if (!tokenProvider.validateToken(request.refreshToken())) {
+        if (!tokenProvider.validateToken(request.refreshToken())
+                || !tokenProvider.isRefreshToken(request.refreshToken())) {
             throw new BusinessException("Refresh token inválido ou expirado. Por favor, faça login novamente.");
         }
 

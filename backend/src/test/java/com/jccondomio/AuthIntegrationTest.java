@@ -102,6 +102,15 @@ class AuthIntegrationTest {
         mockMvc.perform(get("/api/v1/companies/my")
                         .header("Authorization", "Bearer " + setupResponse.accessToken()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tradeName").value("JC Empreendimentos"));
+                .andExpect(jsonPath("$.tradeName").value("JC Empreendimentos"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"));
+
+        // Um access token não pode ser reutilizado como refresh token.
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new AuthDto.RefreshTokenRequest(setupResponse.accessToken()))))
+                .andExpect(status().isBadRequest());
     }
 }

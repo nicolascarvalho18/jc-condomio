@@ -60,11 +60,10 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Autenticação de usuário com geração de JWT")
     public ResponseEntity<AuthDto.LoginResponse> login(@Valid @RequestBody AuthDto.LoginRequest request, HttpServletRequest httpRequest) {
+        // O endereço recebido diretamente pelo servidor é usado por padrão.
+        // Cabeçalhos de encaminhamento só devem ser confiados quando houver um
+        // proxy reverso explicitamente configurado e confiável.
         String clientIp = httpRequest.getRemoteAddr();
-        String xff = httpRequest.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            clientIp = xff.split(",")[0].trim();
-        }
         return ResponseEntity.ok(authService.login(request, clientIp));
     }
 
