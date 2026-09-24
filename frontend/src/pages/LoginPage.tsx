@@ -31,7 +31,13 @@ export const LoginPage: React.FC = () => {
       else localStorage.removeItem('souza-remembered-email');
     } catch (requestError: any) {
       const status = requestError.response?.status;
-      setError(status === 401 || status === 403 ? 'E-mail ou senha inválidos' : 'Não foi possível entrar. Tente novamente.');
+      if (status === 401 || status === 403) {
+        setError('E-mail ou senha inválidos');
+      } else if (!requestError.response || requestError.code === 'ERR_NETWORK') {
+        setError('Servidor de autenticação indisponível. Verifique a API de produção e tente novamente.');
+      } else {
+        setError('Não foi possível entrar. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
