@@ -1,8 +1,11 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:jccondomiodb}
-    username: ${DB_USERNAME:jcuser}
-    password: ${DB_PASSWORD}
+    # Em hospedagens gerenciadas, como Supabase, prefira informar a URL JDBC
+    # completa via SPRING_DATASOURCE_URL. O formato DB_HOST continua atendendo
+    # ao Docker Compose local.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:jccondomiodb}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:jcuser}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
