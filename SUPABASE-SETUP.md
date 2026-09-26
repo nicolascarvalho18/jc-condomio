@@ -29,10 +29,17 @@ Depois faça um novo deploy. A chave deve ser a **publishable/anon**; a chave
 O login só aceita contas ativas que tenham perfil. Isso evita uma conta criada
 no Auth receber acesso ao sistema sem autorização.
 
-## Próxima etapa obrigatória
+## Base operacional criada
 
-Este commit prepara o login. As telas de condomínio, clientes, contratos,
-financeiro e auditoria ainda usam a API Java atual. Para uma aplicação 100%
-Supabase, essas tabelas, regras de cálculo, auditoria e políticas RLS precisam
-ser migradas em seguida; não é seguro fingir que elas funcionam somente com o
-login migrado.
+A migration `supabase/migrations/20260926_002_core_schema.sql` cria, sem apagar
+dados, as tabelas de empresas, clientes, condomínios, contratos, parcelas,
+pagamentos e auditoria. Ela também ativa RLS e limita o acesso à empresa
+vinculada ao perfil autenticado.
+
+## Migração dos módulos
+
+O login e a base operacional já estão preparados para Supabase, mas algumas
+telas ainda usam os endpoints da API Java durante a transição. A migração dos
+módulos deve ser feita por etapas, começando por clientes e condomínios e depois
+contratos, parcelas e financeiro. Não remova a API Java enquanto essa transição
+não terminar, porque ela ainda é o fallback local.
