@@ -1,7 +1,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
-const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+const projectSupabaseUrl = 'https://ckqrrulswrabxxxozgeu.supabase.co';
+const projectSupabasePublishableKey = 'sb_publishable_hjVCoQ0t44fnomgnyTqR6w_nYzEz8W3';
+
+// This is a Supabase publishable key, which is designed to be used by browser
+// clients and remains protected by Auth/RLS. Keeping the active project value
+// here prevents a stale Vercel environment variable from breaking login.
+const supabaseUrl = projectSupabaseUrl;
+const supabasePublishableKey = projectSupabasePublishableKey;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
 
