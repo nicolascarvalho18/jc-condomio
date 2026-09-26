@@ -37,7 +37,7 @@ export interface StatusChangePayload {
 }
 
 export interface User {
-  id: number;
+  id: number | string;
   name: string;
   email: string;
   role: Role;
@@ -47,7 +47,7 @@ export interface User {
   statusReason?: string;
   statusNotes?: string;
   statusDate?: string;
-  companyId: number;
+  companyId: number | string;
   companyName?: string;
 }
 

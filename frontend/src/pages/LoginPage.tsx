@@ -33,8 +33,12 @@ export const LoginPage: React.FC = () => {
       const status = requestError.response?.status;
       if (status === 401 || status === 403) {
         setError('E-mail ou senha inválidos');
+      } else if (requestError?.message === 'Esta conta não possui acesso ativo ao sistema.') {
+        setError('Esta conta não possui acesso ativo ao sistema.');
       } else if (!requestError.response || requestError.code === 'ERR_NETWORK') {
         setError('Servidor de autenticação indisponível. Verifique a API de produção e tente novamente.');
+      } else if (requestError?.message) {
+        setError(requestError.message);
       } else {
         setError('Não foi possível entrar. Tente novamente.');
       }
