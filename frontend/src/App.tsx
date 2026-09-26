@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ToastContainer } from './components/common/ToastContainer';
@@ -7,15 +7,16 @@ import { LoginPage } from './pages/LoginPage';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 
-// Lazy loading das páginas para code-splitting e carregamento ágil sob demanda
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
-const CondominiumsPage = lazy(() => import('./pages/CondominiumsPage').then((m) => ({ default: m.CondominiumsPage })));
-const CustomersPage = lazy(() => import('./pages/CustomersPage').then((m) => ({ default: m.CustomersPage })));
-const ContractsPage = lazy(() => import('./pages/ContractsPage').then((m) => ({ default: m.ContractsPage })));
-const FinancialPage = lazy(() => import('./pages/FinancialPage').then((m) => ({ default: m.FinancialPage })));
-const ReportsPage = lazy(() => import('./pages/ReportsPage').then((m) => ({ default: m.ReportsPage })));
-const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage })));
-const CompanySettingsPage = lazy(() => import('./pages/CompanySettingsPage').then((m) => ({ default: m.CompanySettingsPage })));
+// Keep the application shell and all pages in the same build entry. This avoids
+// blank screens when a browser keeps an older Vercel chunk in cache.
+import { DashboardPage } from './pages/DashboardPage';
+import { CondominiumsPage } from './pages/CondominiumsPage';
+import { CustomersPage } from './pages/CustomersPage';
+import { ContractsPage } from './pages/ContractsPage';
+import { FinancialPage } from './pages/FinancialPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { AuditLogsPage } from './pages/AuditLogsPage';
+import { CompanySettingsPage } from './pages/CompanySettingsPage';
 
 import {
   LayoutDashboard,
@@ -24,13 +25,6 @@ import {
   CircleDollarSign,
   Menu as MenuIcon,
 } from 'lucide-react';
-
-const PageLoader: React.FC = () => (
-  <div className="min-h-[400px] flex flex-col items-center justify-center text-slate-400">
-    <div className="w-8 h-8 border-3 border-[#A61F24] border-t-transparent rounded-full animate-spin mb-2" />
-    <span className="text-xs font-medium">Carregando módulo...</span>
-  </div>
-);
 
 const getTabFromHash = (): string => {
   const hash = window.location.hash.replace(/^#\/?/, '');
@@ -108,37 +102,35 @@ const AppContent: React.FC = () => {
           onToggleCollapsed={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
         />
         <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 overflow-x-hidden pb-24 lg:pb-10">
-          <Suspense fallback={<PageLoader />}>
-            {activeTab === 'dashboard' && (
+          {activeTab === 'dashboard' && (
               <DashboardPage
                 onNavigate={(tab) => handleNavigateWithAction(tab)}
                 onNavigateWithAction={handleNavigateWithAction}
               />
-            )}
-            {activeTab === 'condominiums' && (
+          )}
+          {activeTab === 'condominiums' && (
               <CondominiumsPage
                 initialOpenModal={autoOpenModal === 'condominium'}
                 onModalClose={() => setAutoOpenModal(null)}
               />
-            )}
-            {activeTab === 'customers' && (
+          )}
+          {activeTab === 'customers' && (
               <CustomersPage
                 initialOpenModal={autoOpenModal === 'customer'}
                 onModalClose={() => setAutoOpenModal(null)}
               />
-            )}
-            {activeTab === 'contracts' && (
+          )}
+          {activeTab === 'contracts' && (
               <ContractsPage
                 onNavigateToReports={() => setActiveTab('reports')}
                 initialOpenModal={autoOpenModal === 'contract'}
                 onModalClose={() => setAutoOpenModal(null)}
               />
-            )}
-            {activeTab === 'financial' && <FinancialPage />}
-            {activeTab === 'reports' && <ReportsPage />}
-            {activeTab === 'audit' && <AuditLogsPage />}
-            {activeTab === 'settings' && <CompanySettingsPage />}
-          </Suspense>
+          )}
+          {activeTab === 'financial' && <FinancialPage />}
+          {activeTab === 'reports' && <ReportsPage />}
+          {activeTab === 'audit' && <AuditLogsPage />}
+          {activeTab === 'settings' && <CompanySettingsPage />}
         </main>
       </div>
 
