@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api/client';
+import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import { DashboardSummary, Contract, Installment, Condominium, Customer } from '../types';
 import { StatusBadge } from '../components/common/StatusBadge';
 import {
@@ -32,6 +33,74 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     setLoading(true);
     setLoadError(null);
     try {
+      if (isSupabaseConfigured) {
+        const client = getSupabase();
+        const [contractsResult, installmentsResult, condosResult, customersResult] = await Promise.all([
+          client.from('contracts').select('*').order('created_at', { ascending: false }).limit(5),
+          client.from('installments').select('*').order('business_due_date', { ascending: true }).limit(5),
+          client.from('condominiums').select('*').eq('deleted', false).order('created_at', { ascending: false }).limit(5),
+          client.from('customers').select('*').eq('deleted', false).order('created_at', { ascending: false }).limit(5),
+        ]);
+
+        const errors = [contractsResult.error, installmentsResult.error, condosResult.error, customersResult.error].filter(Boolean);
+        if (errors.length) {
+          throw errors[0];
+        }
+
+        const toNumber = (value: unknown) => Number(value || 0);
+        const contracts = contractsResult.data || [];
+        const installmentsData = installmentsResult.data || [];
+        const condos = condosResult.data || [];
+        const customers = customersResult.data || [];
+        const currentMonth = new Date().toISOString().slice(0, 7);
+
+        setSummary({
+          totalVgv: contracts.reduce((total, contract) => total + toNumber(contract.total_amount), 0),
+          totalReceived: installmentsData.reduce((total, installment) => total + toNumber(installment.paid_amount), 0),
+          totalReceivable: installmentsData.filter((installment) => !['PAID', 'CANCELLED'].includes(installment.status)).reduce((total, installment) => total + toNumber(installment.balance_amount), 0),
+          totalOverdueAmount: installmentsData.filter((installment) => installment.status === 'OVERDUE').reduce((total, installment) => total + toNumber(installment.balance_amount), 0),
+          totalOverdueCount: installmentsData.filter((installment) => installment.status === 'OVERDUE').length,
+          currentMonthExpected: installmentsData.filter((installment) => installment.due_date?.startsWith(currentMonth)).reduce((total, installment) => total + toNumber(installment.updated_amount), 0),
+          currentMonthReceived: installmentsData.filter((installment) => installment.updated_at?.startsWith(currentMonth)).reduce((total, installment) => total + toNumber(installment.paid_amount), 0),
+          totalCondominiums: condos.length,
+          totalUnits: 0,
+          availableUnits: 0,
+          soldUnits: 0,
+          reservedUnits: 0,
+          activeContracts: contracts.filter((contract) => contract.status === 'ACTIVE').length,
+          unitsByStatus: {},
+          totalCustomers: customers.length,
+          customersByStatus: {
+            ACTIVE: customers.filter((customer) => customer.status === 'ACTIVE').length,
+            PAUSED: customers.filter((customer) => customer.status === 'PAUSED').length,
+            FINISHED: customers.filter((customer) => customer.status === 'FINISHED').length,
+            CANCELLED: customers.filter((customer) => customer.status === 'CANCELLED').length,
+          },
+          installmentsBySituation: {},
+        });
+        setRecentContracts(contracts.map((contract) => ({
+          id: contract.id,
+          contractNumber: contract.contract_number,
+          customerName: undefined,
+          condominiumName: undefined,
+          totalAmount: toNumber(contract.total_amount),
+          status: contract.status,
+        })) as Contract[]);
+        setInstallments(installmentsData.map((installment) => ({
+          id: installment.id,
+          customerName: '',
+          condominiumName: '',
+          installmentNumber: installment.installment_number,
+          businessDueDate: installment.business_due_date,
+          baseAmount: toNumber(installment.base_amount),
+          totalPayable: toNumber(installment.updated_amount),
+          financialSituation: installment.status === 'PAID' ? 'PAGA' : installment.status === 'CANCELLED' ? 'CANCELADA' : installment.status === 'PARTIALLY_PAID' ? 'PARCIALMENTE_PAGA' : installment.status === 'OVERDUE' ? 'VENCIDA' : installment.status === 'DUE_TODAY' ? 'VENCE_HOJE' : 'EM_ABERTO',
+        })) as Installment[]);
+        setRecentCondos(condos.map((condo) => ({ id: condo.id, name: condo.name, type: condo.type, status: condo.status })) as Condominium[]);
+        setRecentCustomers(customers.map((customer) => ({ id: customer.id, name: customer.name, document: customer.document, phone: customer.phone, customerType: customer.customer_type === 'COMPANY' ? 'LEGAL_ENTITY' : 'INDIVIDUAL', status: customer.status })) as Customer[]);
+        return;
+      }
+
       const [summaryRes, contractsRes, installmentsRes, condosRes, custsRes] = await Promise.allSettled([
         api.get<DashboardSummary>('/dashboard/summary'),
         api.get('/contracts', { params: { size: 5, sort: 'createdAt,desc' } }),
