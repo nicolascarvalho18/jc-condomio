@@ -34,7 +34,14 @@ export const LoginPage: React.FC = () => {
       const status = requestError.response?.status;
       if (!isSupabaseConfigured) {
         setError('Supabase não está configurado neste ambiente. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY e reinicie o frontend.');
-      } else if (status === 401 || status === 403 || requestError?.code === 'invalid_credentials') {
+      } else if (
+        status === 401 ||
+        status === 403 ||
+        requestError?.status === 400 ||
+        requestError?.status === 401 ||
+        requestError?.code === 'invalid_credentials' ||
+        /invalid login credentials|invalid credentials/i.test(requestError?.message || '')
+      ) {
         setError('E-mail ou senha inválidos');
       } else if (requestError?.message === 'Esta conta não possui acesso ativo ao sistema.') {
         setError('Esta conta não possui acesso ativo ao sistema.');
