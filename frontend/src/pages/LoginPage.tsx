@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AlertCircle, Eye, EyeOff, Loader2, LockKeyhole, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -31,12 +32,14 @@ export const LoginPage: React.FC = () => {
       else localStorage.removeItem('souza-remembered-email');
     } catch (requestError: any) {
       const status = requestError.response?.status;
-      if (status === 401 || status === 403) {
+      if (!isSupabaseConfigured) {
+        setError('Supabase não está configurado neste ambiente. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY e reinicie o frontend.');
+      } else if (status === 401 || status === 403 || requestError?.code === 'invalid_credentials') {
         setError('E-mail ou senha inválidos');
       } else if (requestError?.message === 'Esta conta não possui acesso ativo ao sistema.') {
         setError('Esta conta não possui acesso ativo ao sistema.');
       } else if (!requestError.response || requestError.code === 'ERR_NETWORK') {
-        setError('Servidor de autenticação indisponível. Verifique a API de produção e tente novamente.');
+        setError('Não foi possível acessar o Supabase. Verifique a URL pública, a chave publishable e a conexão e tente novamente.');
       } else if (requestError?.message) {
         setError(requestError.message);
       } else {
